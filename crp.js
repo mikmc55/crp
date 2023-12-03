@@ -2,6 +2,7 @@ const prompt = require("prompt-sync")({ sigint: true });
 const { exec, execSync } = require("child_process");
 
 let _token = null;
+let tokenTime = null;
 
 let getDataForTokenRequest = async () => {
   let refreshToken = await fetch(
@@ -32,7 +33,11 @@ let getDataForTokenRequest = async () => {
 
 let getToken = async () => {
   let token = _token;
-  if (token == null || typeof token === "undefined") {
+  let expired = token == null || tokenTime + 300000 <= Date.now();
+  console.log({ now: Date.now() });
+  console.log({ tokenTime });
+  console.log({ expired });
+  if (expired || token == null || typeof token === "undefined") {
     let tokenData = await getDataForTokenRequest();
     let newToken = await fetch("https://beta-api.crunchyroll.com/index/v2", {
       method: "GET",
@@ -44,6 +49,7 @@ let getToken = async () => {
     let allTokens = JSON.parse(newToken);
     allTokens["token"] = tokenData;
     _token = allTokens;
+    tokenTime = Date.now();
     return allTokens;
   }
   return token;
@@ -377,8 +383,9 @@ let playWithMPV = async (url = "") => {
   if (!url || url == "") {
     return;
   }
+  console.log({ url });
   let child = execSync(
-    `mpv --referrer='https://www.crunchyroll.com' '${url}' `
+    `mpv --profile=low-latency --referrer='https://www.crunchyroll.com' '${url}' `
   );
 
   console.log({ child: child.toString() });
