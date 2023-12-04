@@ -1,56 +1,73 @@
 const prompt = require("prompt-sync")({ sigint: true });
 const { exec, execSync } = require("child_process");
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args)); //csm mode
+const ChromecastAPI = require("chromecast-api");
 
 let _token = null;
 let tokenTime = null;
 
 let getDataForTokenRequest = async () => {
-  let refreshToken = await fetch(
-    "https://raw.githubusercontent.com/Samfun75/File-host/main/aniyomi/refreshToken.txt"
-  );
+  for (let i = 0; i < 2; index++) {
+    try {
+      let refreshToken = await fetch(
+        "https://raw.githubusercontent.com/Samfun75/File-host/main/aniyomi/refreshToken.txt"
+      );
 
-  refreshToken =
-    refreshToken?.statusText == "OK" ? await refreshToken.text() : "";
+      refreshToken =
+        refreshToken?.statusText == "OK" ? await refreshToken.text() : "";
 
-  refreshToken = refreshToken.replace(/[\n\r]/gi, "");
-  const data = new URLSearchParams();
-  data.append("grant_type", "refresh_token");
-  data.append("refresh_token", refreshToken);
-  data.append("scope", "offline_access");
+      refreshToken = refreshToken.replace(/[\n\r]/gi, "");
+      const data = new URLSearchParams();
+      data.append("grant_type", "refresh_token");
+      data.append("refresh_token", refreshToken);
+      data.append("scope", "offline_access");
 
-  let resp = await fetch("https://beta-api.crunchyroll.com/auth/v1/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Authorization:
-        "Basic a3ZvcGlzdXZ6Yy0teG96Y21kMXk6R21JSTExenVPVnRnTjdlSWZrSlpibzVuLTRHTlZ0cU8=",
-    },
-    body: data.toString(),
-  });
-  resp = resp?.statusText == "OK" ? await resp.json() : {};
-  return resp;
+      let resp = await fetch("https://beta-api.crunchyroll.com/auth/v1/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization:
+            "Basic a3ZvcGlzdXZ6Yy0teG96Y21kMXk6R21JSTExenVPVnRnTjdlSWZrSlpibzVuLTRHTlZ0cU8=",
+        },
+        body: data.toString(),
+      });
+      resp = resp?.statusText == "OK" ? await resp.json() : {};
+      return resp;
+    } catch (error) {
+      continue;
+    }
+  }
 };
 
 let getToken = async () => {
   let token = _token;
   let expired = token == null || tokenTime + 300000 <= Date.now();
-  console.log({ now: Date.now() });
-  console.log({ tokenTime });
   console.log({ expired });
   if (expired || token == null || typeof token === "undefined") {
-    let tokenData = await getDataForTokenRequest();
-    let newToken = await fetch("https://beta-api.crunchyroll.com/index/v2", {
-      method: "GET",
-      headers: {
-        authorization: `${tokenData.token_type} ${tokenData.access_token}`,
-      },
-    });
-    newToken = newToken?.statusText == "OK" ? await newToken.text() : "";
-    let allTokens = JSON.parse(newToken);
-    allTokens["token"] = tokenData;
-    _token = allTokens;
-    tokenTime = Date.now();
-    return allTokens;
+    for (let id = 0; id < 2; id++) {
+      try {
+        let tokenData = await getDataForTokenRequest();
+        let newToken = await fetch(
+          "https://beta-api.crunchyroll.com/index/v2",
+          {
+            method: "GET",
+            headers: {
+              authorization: `${tokenData.token_type} ${tokenData.access_token}`,
+            },
+          }
+        );
+        newToken = newToken?.statusText == "OK" ? await newToken.text() : "";
+        let allTokens = JSON.parse(newToken);
+        allTokens["token"] = tokenData;
+        _token = allTokens;
+
+        tokenTime = Date.now();
+        return allTokens;
+      } catch (error) {
+        continue;
+      }
+    }
   }
   return token;
 };
@@ -91,7 +108,8 @@ let getData = async (video_id) => {
       continue;
     }
     let mediaId = mediaInfo[0];
-    let url = `https://beta-api.crunchyroll.com/cms/v2${allTokens.cms.bucket}/videos/${mediaId}/streams?Policy=${allTokens.cms.policy}&Signature=${allTokens.cms.signature}&Key-Pair-Id=${allTokens.cms.key_pair_id}`;
+    let url = `https://beta-api.crunchyroll.com/cms/v2${allTokens.cms.bucket}/videos/${mediaId}/streams?Policy=${allTokens.cms.policy}&Signature=${allTokens.cms.signature}&Key-Pair-Id=${allTokens.cms.key_pair_id}&locale=fr-FR`;
+
     let response_media = await fetch(url, {
       method: "GET",
       headers: {
@@ -119,25 +137,33 @@ let search = async (searchTerm = "") => {
     return {};
   }
 
-  let api = `https://beta-api.crunchyroll.com/content/v2/discover/search?q=${searchTerm?.replace(
-    /\s/g,
-    "+"
-  )}&n=20&type=series,top_results,movie_listing&preferred_audio_language=en-US&locale=en-US`;
-  //   )}&n=6&type=series,top_results,movie_listing&preferred_audio_language=en-US&locale=en-US`;
+  for (let i = 0; i < 2; i++) {
+    try {
+      let api = `https://beta-api.crunchyroll.com/content/v2/discover/search?q=${searchTerm?.replace(
+        /\s/g,
+        "+"
+      )}&n=20&type=series,top_results,movie_listing&preferred_audio_language=fr-FRS&locale=fr-FR`;
+      //   )}&n=6&type=series,top_results,movie_listing&preferred_audio_language=en-US&locale=en-US`;
 
-  let res = await fetch(api, {
-    headers: {
-      Authorization: `${token?.token?.token_type} ${token?.token?.access_token}`,
-    },
-  });
-  if (res.status < 400) {
-    let data = await res?.json();
+      let res = await fetch(api, {
+        headers: {
+          Authorization: `${token?.token?.token_type} ${token?.token?.access_token}`,
+        },
+      });
+      if (res.status < 400) {
+        let data = await res?.json();
 
-    let topResults =
-      data?.data?.find((el) => el["type"] == "top_results") ?? {};
-    return "items" in topResults ? topResults["items"] : [];
+        let topResults =
+          data?.data?.find((el) => el["type"] == "top_results") ?? {};
+        return "items" in topResults ? topResults["items"] : [];
+      }
+      return {};
+    } catch (error) {
+      continue;
+    }
+
+    return null;
   }
-  return {};
 };
 
 let getSeasons = async (id = "") => {
@@ -148,7 +174,7 @@ let getSeasons = async (id = "") => {
     return {};
   }
 
-  let api = `https://beta-api.crunchyroll.com/content/v2/cms/series/${id?.trim()}/seasons?force_locale=&preferred_audio_language=fr-FR&locale=en-US`;
+  let api = `https://beta-api.crunchyroll.com/content/v2/cms/series/${id?.trim()}/seasons?force_locale=&preferred_audio_language=fr-FR&locale=fr-FR`;
 
   // https://www.crunchyroll.com/content/v2/cms/seasons/GY5VEPZPY/episodes?preferred_audio_language=fr-FR&locale=en-US for episodes
 
@@ -181,7 +207,7 @@ let getEps = async (id = "") => {
     return {};
   }
 
-  let api = `https://beta-api.crunchyroll.com/content/v2/cms/seasons/${id?.trim()}/episodes?preferred_audio_language=fr-FR&locale=en-US`;
+  let api = `https://beta-api.crunchyroll.com/content/v2/cms/seasons/${id?.trim()}/episodes?preferred_audio_language=fr-FR&locale=fr-FR`;
 
   let res = await fetch(api, {
     headers: {
@@ -208,12 +234,23 @@ let getEps = async (id = "") => {
     }
     let results = await search(searchTerm);
 
+    if (!results) {
+      return;
+    }
+
     clear();
     console.log(`Results for '${searchTerm}':\r`);
 
     while (true) {
       for (i in results) {
-        console.log(`${(parseInt(i) ?? 0) + 1}. ${results[i]["title"]}`);
+        console.log(
+          `${(parseInt(i) ?? 0) + 1}. ${results[i]["title"]} - ${
+            "series_metadata" in results[i] &&
+            results[i]["series_metadata"]["is_dubbed"] == true
+              ? "Doublé"
+              : "Pas doublé"
+          }`
+        );
       }
 
       let choice = prompt("Choice?: ");
@@ -318,6 +355,7 @@ let getEps = async (id = "") => {
           let streamsUrls = [];
 
           for (item in streams["streams"]) {
+            // console.log({ [item]: Object.values(streams["streams"][item]) });
             streamsUrls = [
               ...streamsUrls,
               [...Object.values(streams["streams"][item])],
@@ -369,7 +407,12 @@ let getEps = async (id = "") => {
               return;
             }
 
-            await playWithMPV(choiceData["url"]);
+            try {
+              await playWithMPV(choiceData["url"]);
+            } catch (error) {
+              console.log({ error });
+              break;
+            }
           }
         }
       }
@@ -379,18 +422,41 @@ let getEps = async (id = "") => {
   //===================================================
 })();
 
-let playWithMPV = async (url = "") => {
+let playWithMPV = async (url = "", cb = () => {}) => {
   if (!url || url == "") {
     return;
   }
-  console.log({ url });
   let child = execSync(
     `mpv --profile=low-latency --referrer='https://www.crunchyroll.com' '${url}' `
+    // `mpv --profile=low-latency --referrer='https://www.crunchyroll.com' '${url}' `
   );
 
+  interceptSigInt(() => {
+    cb();
+  });
+
   console.log({ child: child.toString() });
+
+  let choice = prompt("just to see");
 };
 
 let clear = () => {
   console.clear();
+};
+
+interceptSigInt = (cb = () => {}) => {
+  if (process.platform === "win32") {
+    var rl = require("readline").createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    rl.on("SIGINT", function () {
+      process.emit("SIGINT");
+    });
+  }
+
+  process.on("SIGINT", function () {
+    cb();
+  });
 };
