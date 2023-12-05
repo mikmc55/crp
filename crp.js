@@ -242,6 +242,7 @@ let getEps = async (id = "") => {
     console.log(`Results for '${searchTerm}':\r`);
 
     while (true) {
+      // clear();
       for (i in results) {
         console.log(
           `${(parseInt(i) ?? 0) + 1}. ${results[i]["title"]} - ${
@@ -285,7 +286,6 @@ let getEps = async (id = "") => {
 
       while (true) {
         clear();
-
         for (i in seasons) {
           console.log(`${(parseInt(i) ?? 0) + 1}. ${seasons[i]["title"]}`);
         }
@@ -295,6 +295,7 @@ let getEps = async (id = "") => {
           clear();
           break;
         }
+        clear();
         choice = parseInt(choice) ?? 1;
 
         if (choice < 1 || choice > seasons?.length) {
@@ -349,13 +350,14 @@ let getEps = async (id = "") => {
 
           let streams = await getData(epChoiceData["id"]);
 
+          console.log(epChoiceData["id"]);
+
           extradata = streams[1];
           streams = streams[0];
 
           let streamsUrls = [];
 
           for (item in streams["streams"]) {
-            // console.log({ [item]: Object.values(streams["streams"][item]) });
             streamsUrls = [
               ...streamsUrls,
               [...Object.values(streams["streams"][item])],
@@ -372,18 +374,31 @@ let getEps = async (id = "") => {
           while (true) {
             clear();
             for (i in streamsUrls) {
-              console.log(
-                `${(parseInt(i) ?? 0) + 1}. ${epChoiceData["title"]} - ${
-                  "hardsub_locale" in streamsUrls[i]
-                    ? streamsUrls[i]["hardsub_locale"]
-                    : ""
-                }`
-              );
+              if (
+                streamsUrls[i]["hardsub_locale"] == "" ||
+                streamsUrls[i]["hardsub_locale"].includes("fr-FR") ||
+                streamsUrls[i]["hardsub_locale"].includes("en-US")
+              ) {
+                console.log(
+                  `${(parseInt(i) ?? 0) + 1}. ${epChoiceData["title"]}${
+                    "hardsub_locale" in streamsUrls[i] &&
+                    streamsUrls[i]["hardsub_locale"] != ""
+                      ? " - " + streamsUrls[i]["hardsub_locale"]
+                      : ""
+                  }${
+                    "url" in streamsUrls[i] &&
+                    (streamsUrls[i]["url"].includes(".m3u?") ||
+                      streamsUrls[i]["url"].includes(".m3u8?"))
+                      ? " - m3u8"
+                      : ""
+                  }`
+                );
+              }
             }
 
             choice = prompt("Source?: ");
+            clear();
             if (choice == "q") {
-              clear();
               break;
             }
             choice = parseInt(choice) ?? 1;
@@ -404,7 +419,8 @@ let getEps = async (id = "") => {
             );
 
             if (choiceData["url"] == null || choiceData["url"] == "") {
-              return;
+              clear();
+              break;
             }
 
             try {
@@ -436,8 +452,6 @@ let playWithMPV = async (url = "", cb = () => {}) => {
   });
 
   console.log({ child: child.toString() });
-
-  let choice = prompt("just to see");
 };
 
 let clear = () => {
