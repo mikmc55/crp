@@ -1,5 +1,5 @@
 const prompt = require("prompt-sync")({ sigint: true });
-const { exec, execSync } = require("child_process");
+const { exec, execSync, spawn, spawnSync } = require("child_process");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args)); //csm mode
 const ChromecastAPI = require("chromecast-api");
@@ -73,30 +73,36 @@ let getToken = async () => {
 };
 
 let getMediaInfo = async (video_id, token) => {
-  let resp = await fetch(
-    `https://beta-api.crunchyroll.com/content/v2/cms/objects/${video_id}?locale=en-US`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `${token.token_type} ${token.access_token}`,
-      },
+  for (let i = 0; i < 2; index++) {
+    try {
+      let resp = await fetch(
+        `https://beta-api.crunchyroll.com/content/v2/cms/objects/${video_id}?locale=en-US`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            authorization: `${token.token_type} ${token.access_token}`,
+          },
+        }
+      );
+
+      resp = resp.statusText == "OK" ? await resp.json() : "error";
+
+      if (!resp || (typeof resp == "string" && resp.includes("error"))) {
+        return null;
+      }
+
+      let json = resp;
+
+      let lang = json.data[0].episode_metadata.subtitle_locales[0];
+      if (json.data[0].episode_metadata.is_dubbed) {
+        lang = json.data[0].episode_metadata.audio_locale;
+      }
+      return [json.data[0].episode_metadata.versions[0].media_guid, lang];
+    } catch (error) {
+      continue;
     }
-  );
-
-  resp = resp.statusText == "OK" ? await resp.json() : "error";
-
-  if (!resp || (typeof resp == "string" && resp.includes("error"))) {
-    return null;
   }
-
-  let json = resp;
-
-  let lang = json.data[0].episode_metadata.subtitle_locales[0];
-  if (json.data[0].episode_metadata.is_dubbed) {
-    lang = json.data[0].episode_metadata.audio_locale;
-  }
-  return [json.data[0].episode_metadata.versions[0].media_guid, lang];
 };
 
 let getData = async (video_id) => {
@@ -200,28 +206,35 @@ let getSeasons = async (id = "") => {
 };
 
 let getEps = async (id = "") => {
-  let token = await getToken();
+  for (let i = 0; i < 2; i++) {
+    try {
+      let token = await getToken();
 
-  if (token == null) {
-    console.log("token null");
-    return {};
-  }
+      if (token == null) {
+        console.log("token null");
+        return {};
+      }
 
-  let api = `https://beta-api.crunchyroll.com/content/v2/cms/seasons/${id?.trim()}/episodes?preferred_audio_language=fr-FR&locale=fr-FR`;
+      let api = `https://beta-api.crunchyroll.com/content/v2/cms/seasons/${id?.trim()}/episodes?preferred_audio_language=fr-FR&locale=fr-FR`;
 
-  let res = await fetch(api, {
-    headers: {
-      Authorization: `${token?.token?.token_type} ${token?.token?.access_token}`,
-    },
-  });
-  if (res.status < 400) {
-    let data = await res?.json();
-    if (!data || !data?.data) {
+      let res = await fetch(api, {
+        headers: {
+          Authorization: `${token?.token?.token_type} ${token?.token?.access_token}`,
+        },
+      });
+      if (res.status < 400) {
+        let data = await res?.json();
+        if (!data || !data?.data) {
+          return [];
+        }
+        return data?.data;
+      }
+      console.log(res?.statusText);
       return [];
+    } catch (error) {
+      continue;
     }
-    return data?.data;
   }
-  console.log(res?.statusText);
   return [];
 };
 
@@ -271,7 +284,8 @@ let getEps = async (id = "") => {
       console.log(`Your choice: ${choiceData["title"]}`);
 
       if (choiceData["id"] == null || choiceData["id"] == "") {
-        return;
+        clear();
+        continue;
       }
 
       let seasons = await getSeasons(choiceData["id"]);
@@ -308,7 +322,8 @@ let getEps = async (id = "") => {
         console.log(`Your choice: ${choiceData["title"]}`);
 
         if (choiceData["id"] == null || choiceData["id"] == "") {
-          return;
+          clear();
+          continue;
         }
 
         //================================================
@@ -341,7 +356,8 @@ let getEps = async (id = "") => {
           console.log(`Your ep: ${epChoiceData["title"]}`);
 
           if (epChoiceData["id"] == null || epChoiceData["id"] == "") {
-            return;
+            clear();
+            continue;
           }
 
           //===================================================
@@ -410,17 +426,22 @@ let getEps = async (id = "") => {
             choice = choice - 1;
 
             choiceData = streamsUrls[choice] ?? {};
+
+            if (!choiceData) {
+              clear();
+              break;
+            }
             console.log(
               `Your choice: ${epChoiceData["title"]} - ${
-                "hardsub_locale" in streamsUrls[choice]
-                  ? streamsUrls[choice]["hardsub_locale"]
+                "hardsub_locale" in choiceData
+                  ? choiceData["hardsub_locale"]
                   : ""
               }`
             );
 
             if (choiceData["url"] == null || choiceData["url"] == "") {
               clear();
-              break;
+              continue;
             }
 
             try {
@@ -438,20 +459,21 @@ let getEps = async (id = "") => {
   //===================================================
 })();
 
-let playWithMPV = async (url = "", cb = () => {}) => {
+let playWithMPV = async (url = "") => {
   if (!url || url == "") {
     return;
   }
-  let child = execSync(
-    `mpv --profile=low-latency --referrer='https://www.crunchyroll.com' '${url}' `
-    // `mpv --profile=low-latency --referrer='https://www.crunchyroll.com' '${url}' `
-  );
 
-  interceptSigInt(() => {
-    cb();
-  });
+  try {
+    const mpv_play = execSync(
+      `mpv --profile=low-latency --referrer='https://www.crunchyroll.com' '${url}'`
+    );
 
-  console.log({ child: child.toString() });
+    console.log(`[MPV] Output: ${mpv_play.toString()}`);
+    let e = prompt(":::");
+  } catch (error) {
+    console.log({ error });
+  }
 };
 
 let clear = () => {
