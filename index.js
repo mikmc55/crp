@@ -12,36 +12,6 @@ const REGEX = {
     /((?:e)|(?:pisode))\s*(?<start>\d{1,3}(?!\d)|\d\d\d??)(?:-?e?(?<end>\d{1,3}))?(?!\d)/, //Exxx-xxx
 };
 
-const SEASONS = ["winter", "spring", "summer", "fall"];
-const YEAR = [];
-
-let getSeasons = async () => {
-  let url = "https://api.jikan.moe/v4/seasons";
-  return fetch(url)
-    .then((res) => res.json())
-    .then((response) => {
-      let last = "1900";
-      if (response && response?.data) {
-        last = response?.data?.pop();
-        last = last["year"] ?? "1900";
-      }
-      return last;
-    })
-    .then((last) => {
-      last = parseInt(last) ?? 1900;
-      let actualYear = new Date().getUTCFullYear();
-      let years = [];
-      for (_; last <= actualYear; last++) {
-        years = [...years, last];
-      }
-      return years;
-    })
-    .catch((err) => {
-      console.log({ err });
-      return [];
-    });
-};
-
 app
   .get("/manifest.json", (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -52,8 +22,8 @@ app
     var json = {
       id: "daiki.moe.catalog",
       version: "1.0.0",
-      name: "Catalog Moe",
-      description: "Anime Movie & TV Catalog",
+      name: "CRP Moe",
+      description: "Anime Movie & TV from CRP",
       logo: "https://raw.githubusercontent.com/daniwalter001/daniwalter001/main/52852137.png",
       resources: [
         {
@@ -62,7 +32,7 @@ app
           idPrefixes: ["tt", "kitsu"],
         },
       ],
-      types: ["movie", "series", "anime", "other"],
+      types: ["movie", "series", "anime"],
       catalogs: [],
     };
 
@@ -73,8 +43,32 @@ app
     res.setHeader("Access-Control-Allow-Headers", "*");
     res.setHeader("Content-Type", "application/json");
     //
+    let media = req.params.type;
+    let id = req.params.id;
+    id = id.replace(".json", "");
 
-    YEAR = await getSeasons();
+    let tmp = [];
+
+    if (id.includes("kitsu")) {
+      tmp = await getImdbFromKitsu(id);
+      if (!tmp) {
+        return res.send({ stream: {} });
+      }
+    } else {
+      tmp = id.split(":");
+    }
+
+    let [tt, s, e, abs_season, abs_episode, abs] = tmp;
+
+    console.log(tmp);
+
+    let meta = await getMeta(tt, media);
+
+    console.log({ meta: id });
+    console.log({ name: meta?.name, year: meta?.year });
+
+    let query = "";
+    query = meta?.name;
 
     //
     return res.send();

@@ -267,28 +267,28 @@ let getEps = async (id = "") => {
         );
       }
 
-      let choice = prompt("Choice?: ");
-      if (choice == "q") {
+      let animeChoice = prompt("Choice?: ");
+      if (animeChoice == "q") {
         clear();
         break;
       }
-      choice = parseInt(choice) ?? 1;
+      animeChoice = parseInt(animeChoice) ?? 1;
 
-      if (choice < 1 || choice > results?.length) {
+      if (animeChoice < 1 || animeChoice > results?.length) {
         console.log("You can't do that.");
         return;
       }
-      choice = choice - 1;
+      animeChoice = animeChoice - 1;
 
-      let choiceData = results[choice] ?? {};
-      console.log(`Your choice: ${choiceData["title"]}`);
+      let animeChoiceData = results[animeChoice] ?? {};
+      console.log(`Your choice: ${animeChoiceData["title"]}`);
 
-      if (choiceData["id"] == null || choiceData["id"] == "") {
+      if (animeChoiceData["id"] == null || animeChoiceData["id"] == "") {
         clear();
         continue;
       }
 
-      let seasons = await getSeasons(choiceData["id"]);
+      let seasons = await getSeasons(animeChoiceData["id"]);
 
       // console.log({ seasons });
 
@@ -304,31 +304,31 @@ let getEps = async (id = "") => {
           console.log(`${(parseInt(i) ?? 0) + 1}. ${seasons[i]["title"]}`);
         }
 
-        choice = prompt("Season?: ");
-        if (choice == "q") {
+        let seasonChoice = prompt("Season?: ");
+        if (seasonChoice == "q") {
           clear();
           break;
         }
         clear();
-        choice = parseInt(choice) ?? 1;
+        seasonChoice = parseInt(seasonChoice) ?? 1;
 
-        if (choice < 1 || choice > seasons?.length) {
+        if (seasonChoice < 1 || seasonChoice > seasons?.length) {
           console.log("You can't do that.");
           return;
         }
-        choice = choice - 1;
+        seasonChoice = seasonChoice - 1;
 
-        choiceData = seasons[choice] ?? {};
-        console.log(`Your choice: ${choiceData["title"]}`);
+        let seasonChoiceData = seasons[seasonChoice] ?? {};
+        console.log(`Your choice: ${seasonChoiceData["title"]}`);
 
-        if (choiceData["id"] == null || choiceData["id"] == "") {
+        if (seasonChoiceData["id"] == null || seasonChoiceData["id"] == "") {
           clear();
           continue;
         }
 
         //================================================
 
-        let eps = await getEps(choiceData["id"]);
+        let eps = await getEps(seasonChoiceData["id"]);
 
         //================================================
 
@@ -412,40 +412,49 @@ let getEps = async (id = "") => {
               }
             }
 
-            choice = prompt("Source?: ");
+            let streamChoice = prompt("Source?: ");
             clear();
-            if (choice == "q") {
+            if (streamChoice == "q") {
               break;
             }
-            choice = parseInt(choice) ?? 1;
+            streamChoice = parseInt(streamChoice) ?? 1;
 
-            if (choice < 1 || choice > streamsUrls?.length) {
+            if (streamChoice < 1 || streamChoice > streamsUrls?.length) {
               console.log("You can't do that.");
               return;
             }
-            choice = choice - 1;
+            streamChoice = streamChoice - 1;
 
-            choiceData = streamsUrls[choice] ?? {};
+            let streamChoiceData = streamsUrls[streamChoice] ?? {};
 
-            if (!choiceData) {
+            if (!streamChoiceData) {
               clear();
               break;
             }
             console.log(
               `Your choice: ${epChoiceData["title"]} - ${
-                "hardsub_locale" in choiceData
-                  ? choiceData["hardsub_locale"]
+                "hardsub_locale" in streamChoiceData
+                  ? streamChoiceData["hardsub_locale"]
                   : ""
               }`
             );
 
-            if (choiceData["url"] == null || choiceData["url"] == "") {
+            if (
+              streamChoiceData["url"] == null ||
+              streamChoiceData["url"] == ""
+            ) {
               clear();
               continue;
             }
 
             try {
-              await playWithMPV(choiceData["url"]);
+              await playWithMPV(
+                streamChoiceData["url"],
+                animeChoiceData["title"],
+                seasonChoice,
+                epchoice,
+                epChoiceData["title"]
+              );
             } catch (error) {
               console.log({ error });
               break;
@@ -455,22 +464,24 @@ let getEps = async (id = "") => {
       }
     }
   }
-
   //===================================================
 })();
 
-let playWithMPV = async (url = "") => {
+let playWithMPV = async (url = "", anime = "", s, e, title = "") => {
   if (!url || url == "") {
     return;
   }
 
+  e = (parseInt(e) ?? 0) + 1;
+  s = (parseInt(s) ?? 0) + 1;
+
   try {
     const mpv_play = execSync(
-      `mpv --profile=low-latency --referrer='https://www.crunchyroll.com' '${url}'`
+      `mpv --title='${anime} ${s}x${e} - ${title}' --profile=low-latency --referrer='https://www.crunchyroll.com' '${url}'`
     );
 
     console.log(`[MPV] Output: ${mpv_play.toString()}`);
-    let e = prompt(":::");
+    let wait = prompt("Enter to continue:::");
   } catch (error) {
     console.log({ error });
   }
