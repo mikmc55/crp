@@ -1,14 +1,23 @@
 const prompt = require("prompt-sync")({ sigint: true });
 const { exec, execSync, spawn, spawnSync } = require("child_process");
+const { SocksProxyAgent } = require("socks-proxy-agent");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args)); //csm mode
-const ChromecastAPI = require("chromecast-api");
 
 let _token = null;
 let tokenTime = null;
 
+const proxyHost = "cr-unblocker.us.to";
+const proxyPort = 1080;
+const proxyUsername = "crunblocker";
+const proxyPassword = "crunblocker";
+
+const agent = new SocksProxyAgent(
+  `socks://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`
+);
+
 let getDataForTokenRequest = async () => {
-  for (let i = 0; i < 2; index++) {
+  for (let i = 0; i < 2; i++) {
     try {
       let refreshToken = await fetch(
         "https://raw.githubusercontent.com/Samfun75/File-host/main/aniyomi/refreshToken.txt"
@@ -30,6 +39,7 @@ let getDataForTokenRequest = async () => {
           Authorization:
             "Basic a3ZvcGlzdXZ6Yy0teG96Y21kMXk6R21JSTExenVPVnRnTjdlSWZrSlpibzVuLTRHTlZ0cU8=",
         },
+        agent,
         body: data.toString(),
       });
       resp = resp?.statusText == "OK" ? await resp.json() : {};
@@ -73,7 +83,7 @@ let getToken = async () => {
 };
 
 let getMediaInfo = async (video_id, token) => {
-  for (let i = 0; i < 2; index++) {
+  for (let i = 0; i < 2; i++) {
     try {
       let resp = await fetch(
         `https://beta-api.crunchyroll.com/content/v2/cms/objects/${video_id}?locale=en-US`,
