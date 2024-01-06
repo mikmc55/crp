@@ -7,6 +7,7 @@ const fetch = (...args) =>
 let _token = null;
 let tokenTime = null;
 
+// Credits to https://github.com/fhuhne/CR-Unblocker for this server
 const proxyHost = "cr-unblocker.us.to";
 const proxyPort = 1080;
 const proxyUsername = "crunblocker";
