@@ -377,8 +377,6 @@ let getEps = async (id = "") => {
 
           let streams = await getData(epChoiceData["id"]);
 
-          console.log(epChoiceData["id"]);
-
           extradata = streams[1];
           streams = streams[0];
 
@@ -438,6 +436,8 @@ let getEps = async (id = "") => {
 
             let streamChoiceData = streamsUrls[streamChoice] ?? {};
 
+            // console.log({ streamChoiceData });
+
             if (!streamChoiceData) {
               clear();
               break;
@@ -488,7 +488,10 @@ let playWithMPV = async (url = "", anime = "", s, e, title = "") => {
 
   try {
     const mpv_play = execSync(
-      `mpv --title='${anime} ${s}x${e} - ${title}' --profile=low-latency --referrer='https://www.crunchyroll.com' '${url}'`
+      `mpv --title='${anime} ${s}x${e} - ${title.replace(
+        /\'/g,
+        ""
+      )}' --profile=low-latency --referrer='https://www.crunchyroll.com' '${url}'`
     );
 
     console.log(`[MPV] Output: ${mpv_play.toString()}`);
