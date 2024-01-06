@@ -1,0 +1,106 @@
+{
+  "assetId": "c5038dbeb2ceadfbde9b54978b7c16d8",
+  "audioLocale": "fr-FR",
+  "bifs": "https://v.vrv.co/evs3/2a6ee18241b44447bf2e4c82f1c56b39/assets/c5038dbeb2ceadfbde9b54978b7c16d8_bif.bif?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly92LnZydi5jby9ldnMzLzJhNmVlMTgyNDFiNDQ0NDdiZjJlNGM4MmYxYzU2YjM5L2Fzc2V0cy8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzA0NTgwMzQxfX19XX0_&Key-Pair-Id=APKAJMWSQ5S7ZB3MF5VA&Signature=WtpUBNlae~sEdgMcXzJk7QxBrIUPdSYlD52gPTo5BkhB7xU4vymfX4VBGhjh58-1kBDvmksGSb-izCDdRNSmVIkbpZJ1ejIsh8JaHBNWEUZNYC43roxrjOTIi9UXH06eUUYGnT~FVEpe603BYsl6pStlItGYMfycoUcw18c5i0bu6yGGW5xVAP-uC6e2PVgKumdy2~B6ubaFLhBw23cvB51Qkg6bwzPsYjSLhcJWnIN2TUk~tRYEBhupSzStOpMXL3QtwTpliwKEkJlKIM~ncyi6uG6JOhhS9LZEGo~fQQI77zTkSbSED-x9d3f0~HGv3q9BvyREgUp92q5tsNx12g__",
+  "burnedInLocale": "",
+  "captions": {},
+  "hardSubs": {
+    "fr-FR": {
+      "hlang": "fr-FR",
+      "url": "https://cr-play-service.prd.crunchyrollsvc.com/v1/manifest/GQJUGDN51/evs3/2a6ee18241b44447bf2e4c82f1c56b39/assets/p/c5038dbeb2ceadfbde9b54978b7c16d8_,3899426.mp4,3899427.mp4,3899425.mp4,3899424.mp4,3899423.mp4,.urlset/manifest.mpd?playbackGuid=08-562ea80d-e28d-4ecf-8ae2-b1bdb3c29945&accountid=9f0c2edd-562b-5455-a148-0ad2d1bdb44d",
+      "quality": "adaptive"
+    }
+  },
+  "session": {
+    "renewSeconds": 270,
+    "noNetworkRetryIntervalSeconds": 30,
+    "noNetworkTimeoutSeconds": 370,
+    "maximumPauseSeconds": 900,
+    "endOfVideoUnloadSeconds": 300,
+    "sessionExpirationSeconds": 21600,
+    "usesStreamLimits": false
+  },
+  "subtitles": {
+    "fr-FR": {
+      "format": "ass",
+      "language": "fr-FR",
+      "url": "https://v.vrv.co/evs3/2a6ee18241b44447bf2e4c82f1c56b39/assets/c5038dbeb2ceadfbde9b54978b7c16d8_234364.txt?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly92LnZydi5jby9ldnMzLzJhNmVlMTgyNDFiNDQ0NDdiZjJlNGM4MmYxYzU2YjM5L2Fzc2V0cy8qIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzA0NTgwMzQxfX19XX0_&Key-Pair-Id=APKAJMWSQ5S7ZB3MF5VA&Signature=WtpUBNlae~sEdgMcXzJk7QxBrIUPdSYlD52gPTo5BkhB7xU4vymfX4VBGhjh58-1kBDvmksGSb-izCDdRNSmVIkbpZJ1ejIsh8JaHBNWEUZNYC43roxrjOTIi9UXH06eUUYGnT~FVEpe603BYsl6pStlItGYMfycoUcw18c5i0bu6yGGW5xVAP-uC6e2PVgKumdy2~B6ubaFLhBw23cvB51Qkg6bwzPsYjSLhcJWnIN2TUk~tRYEBhupSzStOpMXL3QtwTpliwKEkJlKIM~ncyi6uG6JOhhS9LZEGo~fQQI77zTkSbSED-x9d3f0~HGv3q9BvyREgUp92q5tsNx12g__"
+    }
+  },
+  "token": "08-562ea80d-e28d-4ecf-8ae2-b1bdb3c29945",
+  "url": "https://cr-play-service.prd.crunchyrollsvc.com/v1/manifest/GQJUGDN51/evs3/2a6ee18241b44447bf2e4c82f1c56b39/assets/p/c5038dbeb2ceadfbde9b54978b7c16d8_,3898967.mp4,3898968.mp4,3898966.mp4,3898964.mp4,3898965.mp4,.urlset/manifest.mpd?playbackGuid=08-562ea80d-e28d-4ecf-8ae2-b1bdb3c29945&accountid=9f0c2edd-562b-5455-a148-0ad2d1bdb44d",
+  "versions": [
+    {
+      "audio_locale": "ja-JP",
+      "guid": "G69XGG44R",
+      "is_premium_only": false,
+      "media_guid": "G07FNQK95",
+      "original": true,
+      "season_guid": "G6Q9GGV46",
+      "variant": ""
+    },
+    {
+      "audio_locale": "en-US",
+      "guid": "G8WUND3JW",
+      "is_premium_only": false,
+      "media_guid": "GQ9FGDN59",
+      "original": false,
+      "season_guid": "G6X0C4N21",
+      "variant": ""
+    },
+    {
+      "audio_locale": "de-DE",
+      "guid": "GK9U3ZVEW",
+      "is_premium_only": false,
+      "media_guid": "G3WFXPKN8",
+      "original": false,
+      "season_guid": "GR09CXQMJ",
+      "variant": ""
+    },
+    {
+      "audio_locale": "es-419",
+      "guid": "G2XU02X75",
+      "is_premium_only": false,
+      "media_guid": "GDVFVN9M2",
+      "original": false,
+      "season_guid": "GR9PC2W90",
+      "variant": ""
+    },
+    {
+      "audio_locale": "es-ES",
+      "guid": "G9DUEQK1V",
+      "is_premium_only": false,
+      "media_guid": "G1QF40KWZ",
+      "original": false,
+      "season_guid": "GYWEC3KX7",
+      "variant": ""
+    },
+    {
+      "audio_locale": "fr-FR",
+      "guid": "GQJUGDN51",
+      "is_premium_only": false,
+      "media_guid": "GGVF2MWJQ",
+      "original": false,
+      "season_guid": "GYE5CQ5WX",
+      "variant": ""
+    },
+    {
+      "audio_locale": "it-IT",
+      "guid": "G7PU4ZGX8",
+      "is_premium_only": false,
+      "media_guid": "G4GFQJGED",
+      "original": false,
+      "season_guid": "G65VCD4PZ",
+      "variant": ""
+    },
+    {
+      "audio_locale": "pt-BR",
+      "guid": "GVWU0VNM3",
+      "is_premium_only": false,
+      "media_guid": "G25F02X7M",
+      "original": false,
+      "season_guid": "GR75CDK31",
+      "variant": ""
+    }
+  ]
+}

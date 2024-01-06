@@ -1,6 +1,7 @@
 const prompt = require("prompt-sync")({ sigint: true });
 const { exec, execSync, spawn, spawnSync } = require("child_process");
 const { SocksProxyAgent } = require("socks-proxy-agent");
+let xmlParser = require("xml2json");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args)); //csm mode
 
@@ -144,6 +145,73 @@ let getData = async (video_id) => {
 
     return [response_media, mediaInfo[1]];
   }
+};
+
+let getDataForNewStreams = async (video_id) => {
+  for (let i = 0; i < 2; i++) {
+    let allTokens = await getToken();
+
+    // let mediaInfo = await getMediaInfo(video_id, allTokens.token);
+    // if (mediaInfo == null) {
+    //   continue;
+    // }
+
+    // let mediaId = mediaInfo[0];
+    // console.log(mediaId);
+    let url = `https://cr-play-service.prd.crunchyrollsvc.com/v1/${video_id}/android/phone/play`;
+
+    let response_media = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `${allTokens.token.token_type} ${allTokens.token.access_token}`,
+      },
+    });
+
+    // console.log(await response_media.text());
+
+    response_media =
+      response_media.statusText == "OK" ? await response_media.json() : "error";
+
+    if (typeof response_media == "string" && response_media.includes("error")) {
+      continue;
+    }
+
+    return response_media;
+  }
+};
+
+let getManifestXML = async (url = "") => {
+  if (!url) return "";
+  //
+  for (let i = 0; i < 2; i++) {
+    let allTokens = await getToken();
+
+    let response_media = await fetch(url, {
+      method: "GET",
+      headers: {
+        // "Content-Type": "application/json",
+        authorization: `${allTokens.token.token_type} ${allTokens.token.access_token}`,
+      },
+    });
+
+    response_media =
+      response_media.statusText == "OK" ? await response_media.text() : "error";
+
+    if (typeof response_media == "string" && response_media.includes("error")) {
+      continue;
+    }
+
+    return response_media;
+  }
+};
+
+let parseManifestXMLtoJSON = async (xmlContent = "") => {
+  if (!xmlContent) return {};
+
+  let parsed = xmlParser.toJson(xmlContent);
+
+  require("fs").writeFileSync("./test.json", JSON.stringify(parsed));
 };
 
 let search = async (searchTerm = "") => {
@@ -375,102 +443,110 @@ let getEps = async (id = "") => {
 
           console.log("Getting data");
 
-          let streams = await getData(epChoiceData["id"]);
+          let streams = [null, { streams: [] }];
 
-          console.log(epChoiceData["id"]);
+          streams = await getData(epChoiceData["id"]);
 
-          extradata = streams[1];
-          streams = streams[0];
+          let manifestData = await getDataForNewStreams(epChoiceData["id"]);
 
-          let streamsUrls = [];
+          let manifest = await getManifestXML(manifestData?.url);
+          let manifestJson = await parseManifestXMLtoJSON(manifest);
+          //
 
-          for (item in streams["streams"]) {
-            streamsUrls = [
-              ...streamsUrls,
-              [...Object.values(streams["streams"][item])],
-            ];
-          }
+          stop();
 
-          streamsUrls = streamsUrls?.reduce((sum, current) => {
-            sum = sum.concat(current);
-            return sum;
-          }, []);
+          // extradata = streams[1];
+          // streams = streams[0];
+
+          // let streamsUrls = [];
+
+          // for (item in streams["streams"]) {
+          //   streamsUrls = [
+          //     ...streamsUrls,
+          //     [...Object.values(streams["streams"][item])],
+          //   ];
+          // }
+
+          // streamsUrls = streamsUrls?.reduce((sum, current) => {
+          //   sum = sum.concat(current);
+          //   return sum;
+          // }, []);
 
           //================================================
 
-          while (true) {
-            clear();
-            for (i in streamsUrls) {
-              if (
-                streamsUrls[i]["hardsub_locale"] == "" ||
-                streamsUrls[i]["hardsub_locale"].includes("fr-FR") ||
-                streamsUrls[i]["hardsub_locale"].includes("en-US")
-              ) {
-                console.log(
-                  `${(parseInt(i) ?? 0) + 1}. ${epChoiceData["title"]}${
-                    "hardsub_locale" in streamsUrls[i] &&
-                    streamsUrls[i]["hardsub_locale"] != ""
-                      ? " - " + streamsUrls[i]["hardsub_locale"]
-                      : ""
-                  }${
-                    "url" in streamsUrls[i] &&
-                    (streamsUrls[i]["url"].includes(".m3u?") ||
-                      streamsUrls[i]["url"].includes(".m3u8?"))
-                      ? " - m3u8"
-                      : ""
-                  }`
-                );
-              }
-            }
+          // while (true) {
+          //   clear();
+          //   for (i in streamsUrls) {
+          //     if (
+          //       streamsUrls[i]["hardsub_locale"] == "" ||
+          //       streamsUrls[i]["hardsub_locale"].includes("fr-FR") ||
+          //       streamsUrls[i]["hardsub_locale"].includes("en-US")
+          //     ) {
+          //       console.log(
+          //         `${(parseInt(i) ?? 0) + 1}. ${epChoiceData["title"]}${
+          //           "hardsub_locale" in streamsUrls[i] &&
+          //           streamsUrls[i]["hardsub_locale"] != ""
+          //             ? " - " + streamsUrls[i]["hardsub_locale"]
+          //             : ""
+          //         }${
+          //           "url" in streamsUrls[i] &&
+          //           (streamsUrls[i]["url"].includes(".m3u?") ||
+          //             streamsUrls[i]["url"].includes(".m3u8?"))
+          //             ? " - m3u8"
+          //             : ""
+          //         }`
+          //       );
+          //     }
+          //   }
 
-            let streamChoice = prompt("Source?: ");
-            clear();
-            if (streamChoice == "q") {
-              break;
-            }
-            streamChoice = parseInt(streamChoice) ?? 1;
+          //   let streamChoice = prompt("Source?: ");
+          //   clear();
+          //   if (streamChoice == "q") {
+          //     break;
+          //   }
+          //   streamChoice = parseInt(streamChoice) ?? 1;
 
-            if (streamChoice < 1 || streamChoice > streamsUrls?.length) {
-              console.log("You can't do that.");
-              return;
-            }
-            streamChoice = streamChoice - 1;
+          //   if (streamChoice < 1 || streamChoice > streamsUrls?.length) {
+          //     console.log("You can't do that.");
+          //     return;
+          //   }
+          //   streamChoice = streamChoice - 1;
 
-            let streamChoiceData = streamsUrls[streamChoice] ?? {};
+          //   let streamChoiceData = streamsUrls[streamChoice] ?? {};
 
-            if (!streamChoiceData) {
-              clear();
-              break;
-            }
-            console.log(
-              `Your choice: ${epChoiceData["title"]} - ${
-                "hardsub_locale" in streamChoiceData
-                  ? streamChoiceData["hardsub_locale"]
-                  : ""
-              }`
-            );
+          //   if (!streamChoiceData) {
+          //     clear();
+          //     break;
+          //   }
+          //   console.log(
+          //     `Your choice: ${epChoiceData["title"]} - ${
+          //       "hardsub_locale" in streamChoiceData
+          //         ? streamChoiceData["hardsub_locale"]
+          //         : ""
+          //     }`
+          //   );
 
-            if (
-              streamChoiceData["url"] == null ||
-              streamChoiceData["url"] == ""
-            ) {
-              clear();
-              continue;
-            }
+          //   if (
+          //     streamChoiceData["url"] == null ||
+          //     streamChoiceData["url"] == ""
+          //   ) {
+          //     clear();
+          //     continue;
+          //   }
 
-            try {
-              await playWithMPV(
-                streamChoiceData["url"],
-                animeChoiceData["title"],
-                seasonChoice,
-                epchoice,
-                epChoiceData["title"]
-              );
-            } catch (error) {
-              console.log({ error });
-              break;
-            }
-          }
+          //   try {
+          //     await playWithMPV(
+          //       streamChoiceData["url"],
+          //       animeChoiceData["title"],
+          //       seasonChoice,
+          //       epchoice,
+          //       epChoiceData["title"]
+          //     );
+          //   } catch (error) {
+          //     console.log({ error });
+          //     break;
+          //   }
+          // }
         }
       }
     }
@@ -500,6 +576,10 @@ let playWithMPV = async (url = "", anime = "", s, e, title = "") => {
 
 let clear = () => {
   console.clear();
+};
+
+let stop = (entry = "Enter to continue...") => {
+  return prompt(entry);
 };
 
 interceptSigInt = (cb = () => {}) => {
