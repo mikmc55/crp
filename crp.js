@@ -249,7 +249,7 @@ let getEps = async (id = "") => {
   return [];
 };
 
-(async () => {
+let searchOption = async () => {
   while (true) {
     let searchTerm = prompt("Search?: ");
     if (searchTerm == "q") {
@@ -475,8 +475,7 @@ let getEps = async (id = "") => {
       }
     }
   }
-  //===================================================
-})();
+};
 
 let playWithMPV = async (url = "", anime = "", s, e, title = "") => {
   if (!url || url == "") {
@@ -521,3 +520,70 @@ interceptSigInt = (cb = () => {}) => {
     cb();
   });
 };
+
+let popularOption = async () => {
+  while (true) {
+    let catalog = await getPopularCatalog();
+  }
+  // https://www.crunchyroll.com/content/v2/discover/browse?n=36&sort_by=popularity&ratings=true&locale=fr-FR
+};
+
+let getPopularCatalog = async () => {
+  let token = await getToken();
+
+  fetch(
+    "https://www.crunchyroll.com/content/v2/discover/browse?n=36&sort_by=popularity&ratings=true&locale=fr-FR",
+    {
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `${token.token.token_type} ${token.token.access_token}`,
+      },
+    }
+  ).then(async (res) => {
+    console.log(await res.json());
+  });
+  //
+};
+
+(async () => {
+  // searchOption();
+  //
+  while (true) {
+    clear();
+    console.log("-------------------------");
+    console.log("CRP: Crunchyroll Premium");
+    console.log("-------------------------");
+
+    console.log(`
+1- Catalogue: Popular
+2- Catalogue: Most recent
+3- Search
+    `);
+
+    let optionChoice = prompt("Choice:  ");
+
+    if (!isNaN(optionChoice)) {
+      if (optionChoice <= 3 && optionChoice > 0) {
+        console.log("go...");
+        console.log(optionChoice);
+        prompt("");
+        switch (optionChoice) {
+          case 1:
+            popularOption();
+            break;
+
+          default:
+            continue;
+        }
+      } else {
+        continue;
+      }
+    } else {
+      if (optionChoice.toUpperCase() == "Q") {
+        break;
+      } else {
+        continue;
+      }
+    }
+  }
+})();
