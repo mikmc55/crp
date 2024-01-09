@@ -1,6 +1,7 @@
 const prompt = require("prompt-sync")({ sigint: true });
 const { exec, execSync, spawn, spawnSync } = require("child_process");
 const { SocksProxyAgent } = require("socks-proxy-agent");
+const { Log } = require("./helper");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args)); //csm mode
 
@@ -193,8 +194,6 @@ let getSeasons = async (id = "") => {
 
   let api = `https://beta-api.crunchyroll.com/content/v2/cms/series/${id?.trim()}/seasons?force_locale=&preferred_audio_language=fr-FR&locale=fr-FR`;
 
-  // https://www.crunchyroll.com/content/v2/cms/seasons/GY5VEPZPY/episodes?preferred_audio_language=fr-FR&locale=en-US for episodes
-
   try {
     let res = await fetch(api, {
       headers: {
@@ -211,7 +210,7 @@ let getSeasons = async (id = "") => {
     console.log(res?.statusText);
     return [];
   } catch (error) {
-    console.log({ error });
+    Log.error(error);
   }
   return [];
 };
@@ -283,6 +282,9 @@ let searchOption = async () => {
         clear();
         break;
       }
+
+      // =============================================
+
       animeChoice = parseInt(animeChoice) ?? 1;
 
       if (animeChoice < 1 || animeChoice > results?.length) {
@@ -292,6 +294,8 @@ let searchOption = async () => {
       animeChoice = animeChoice - 1;
 
       let animeChoiceData = results[animeChoice] ?? {};
+
+      clear();
       console.log(`Your choice: ${animeChoiceData["title"]}`);
 
       if (animeChoiceData["id"] == null || animeChoiceData["id"] == "") {
@@ -300,8 +304,6 @@ let searchOption = async () => {
       }
 
       let seasons = await getSeasons(animeChoiceData["id"]);
-
-      // console.log({ seasons });
 
       if (!seasons || seasons?.length == 0) {
         return;
@@ -330,6 +332,7 @@ let searchOption = async () => {
         seasonChoice = seasonChoice - 1;
 
         let seasonChoiceData = seasons[seasonChoice] ?? {};
+        clear();
         console.log(`Your choice: ${seasonChoiceData["title"]}`);
 
         if (seasonChoiceData["id"] == null || seasonChoiceData["id"] == "") {
@@ -438,8 +441,8 @@ let searchOption = async () => {
 
             // console.log({ streamChoiceData });
 
+            clear();
             if (!streamChoiceData) {
-              clear();
               break;
             }
             console.log(
@@ -467,7 +470,7 @@ let searchOption = async () => {
                 epChoiceData["title"]
               );
             } catch (error) {
-              console.log({ error });
+              // Log.error(error);
               break;
             }
           }
@@ -496,7 +499,7 @@ let playWithMPV = async (url = "", anime = "", s, e, title = "") => {
     console.log(`[MPV] Output: ${mpv_play.toString()}`);
     let wait = prompt("Enter to continue:::");
   } catch (error) {
-    console.log({ error });
+    Log.error(error);
   }
 };
 
@@ -521,28 +524,254 @@ interceptSigInt = (cb = () => {}) => {
   });
 };
 
-let popularOption = async () => {
+// ================== POPULAR OPTION ============================
+let popularOption = async (type = "popularity") => {
+  let catalog = await getPopularCatalog(type);
   while (true) {
-    let catalog = await getPopularCatalog();
+    if (!catalog || catalog?.length == 0) {
+      break;
+    }
+
+    for (const i in catalog) {
+      let item = catalog[i];
+      console.log(`${(parseInt(i) ?? 0) + 1}. ${item["title"]}`);
+    }
+    let showChoice = prompt("Choice: ");
+    if (showChoice.toLowerCase() == "q") {
+      clear();
+      break;
+    }
+    if (isNaN(showChoice) && showChoice.toLowerCase() == "q") {
+      clear();
+      continue;
+    }
+
+    showChoice = parseInt(showChoice) - 1 ?? 0;
+
+    if (showChoice < 0 || showChoice >= catalog?.length) {
+      clear();
+      continue;
+    }
+
+    let show = catalog[showChoice];
+
+    // =============================================
+
+    clear();
+    console.log(`Your choice: ${show["title"]}`);
+
+    if (show["id"] == null || show["id"] == "") {
+      clear();
+      continue;
+    }
+
+    let seasons = await getSeasons(show["id"]);
+
+    if (!seasons || seasons?.length == 0) {
+      return;
+    }
+
+    //================================================
+
+    while (true) {
+      clear();
+      for (i in seasons) {
+        console.log(`${(parseInt(i) ?? 0) + 1}. ${seasons[i]["title"]}`);
+      }
+
+      let seasonChoice = prompt("Season?: ");
+      if (seasonChoice == "q") {
+        clear();
+        break;
+      }
+      clear();
+      seasonChoice = parseInt(seasonChoice) ?? 1;
+
+      if (seasonChoice < 1 || seasonChoice > seasons?.length) {
+        console.log("You can't do that.");
+        return;
+      }
+      seasonChoice = seasonChoice - 1;
+
+      let seasonChoiceData = seasons[seasonChoice] ?? {};
+
+      clear();
+      console.log(`Your choice: ${seasonChoiceData["title"]}`);
+
+      if (seasonChoiceData["id"] == null || seasonChoiceData["id"] == "") {
+        clear();
+        continue;
+      }
+
+      //================================================
+
+      let eps = await getEps(seasonChoiceData["id"]);
+
+      //================================================
+
+      while (true) {
+        clear();
+        for (i in eps) {
+          console.log(`${(parseInt(i) ?? 0) + 1}. ${eps[i]["title"]}`);
+        }
+
+        let epchoice = prompt("Ep?: ");
+        if (epchoice == "q") {
+          clear();
+          console.log("shoud be breaking");
+          break;
+        }
+        epchoice = parseInt(epchoice) ?? 1;
+
+        if (epchoice < 1 || epchoice > eps?.length) {
+          console.log("You can't do that.");
+          return;
+        }
+        epchoice = epchoice - 1;
+
+        let epChoiceData = eps[epchoice] ?? {};
+        console.log(`Your ep: ${epChoiceData["title"]}`);
+
+        if (epChoiceData["id"] == null || epChoiceData["id"] == "") {
+          clear();
+          continue;
+        }
+
+        //===================================================
+
+        console.log("Getting data");
+
+        let streams = await getData(epChoiceData["id"]);
+
+        extradata = streams[1];
+        streams = streams[0];
+
+        let streamsUrls = [];
+
+        for (item in streams["streams"]) {
+          streamsUrls = [
+            ...streamsUrls,
+            [...Object.values(streams["streams"][item])],
+          ];
+        }
+
+        streamsUrls = streamsUrls?.reduce((sum, current) => {
+          sum = sum.concat(current);
+          return sum;
+        }, []);
+
+        //================================================
+
+        while (true) {
+          clear();
+          for (i in streamsUrls) {
+            if (
+              streamsUrls[i]["hardsub_locale"] == "" ||
+              streamsUrls[i]["hardsub_locale"].includes("fr-FR") ||
+              streamsUrls[i]["hardsub_locale"].includes("en-US")
+            ) {
+              console.log(
+                `${(parseInt(i) ?? 0) + 1}. ${epChoiceData["title"]}${
+                  "hardsub_locale" in streamsUrls[i] &&
+                  streamsUrls[i]["hardsub_locale"] != ""
+                    ? " - " + streamsUrls[i]["hardsub_locale"]
+                    : ""
+                }${
+                  "url" in streamsUrls[i] &&
+                  (streamsUrls[i]["url"].includes(".m3u?") ||
+                    streamsUrls[i]["url"].includes(".m3u8?"))
+                    ? " - m3u8"
+                    : ""
+                }`
+              );
+            }
+          }
+
+          let streamChoice = prompt("Source?: ");
+          clear();
+          if (streamChoice == "q") {
+            break;
+          }
+          streamChoice = parseInt(streamChoice) ?? 1;
+
+          if (streamChoice < 1 || streamChoice > streamsUrls?.length) {
+            console.log("You can't do that.");
+            // prompt("");
+            return;
+          }
+          streamChoice = streamChoice - 1;
+
+          let streamChoiceData = streamsUrls[streamChoice] ?? {};
+
+          clear();
+          if (!streamChoiceData) {
+            // prompt("no strem choice???");
+            break;
+          }
+
+          console.log(
+            `Your choice: ${epChoiceData["title"]} - ${
+              "hardsub_locale" in streamChoiceData
+                ? streamChoiceData["hardsub_locale"]
+                : ""
+            }`
+          );
+
+          if (
+            streamChoiceData["url"] == null ||
+            streamChoiceData["url"] == ""
+          ) {
+            // prompt("url vide");
+
+            clear();
+            continue;
+          }
+
+          try {
+            await playWithMPV(
+              streamChoiceData["url"],
+              show["title"],
+              seasonChoice,
+              epchoice,
+              epChoiceData["title"]
+            );
+          } catch (error) {
+            Log.error(error);
+            prompt("Enter to continue...");
+            break;
+          }
+        }
+      }
+    }
   }
-  // https://www.crunchyroll.com/content/v2/discover/browse?n=36&sort_by=popularity&ratings=true&locale=fr-FR
 };
 
-let getPopularCatalog = async () => {
+let getPopularCatalog = async (type = "popularity") => {
   let token = await getToken();
+  for (let index = 0; index < 2; index++) {
+    try {
+      let res = await fetch(
+        `https://beta-api.crunchyroll.com/content/v2/discover/browse?n=100&sort_by=${type}&ratings=true&locale=fr-FR`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            authorization: `${token.token.token_type} ${token.token.access_token}`,
+          },
+        }
+      );
 
-  fetch(
-    "https://www.crunchyroll.com/content/v2/discover/browse?n=36&sort_by=popularity&ratings=true&locale=fr-FR",
-    {
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `${token.token.token_type} ${token.token.access_token}`,
-      },
+      if (res.status < 400) {
+        let data = await res?.json();
+        if (!data || !data?.data) {
+          return [];
+        }
+        return data?.data;
+      }
+      return [];
+    } catch (error) {
+      continue;
     }
-  ).then(async (res) => {
-    console.log(await res.json());
-  });
-  //
+  }
 };
 
 (async () => {
@@ -555,32 +784,37 @@ let getPopularCatalog = async () => {
     console.log("-------------------------");
 
     console.log(`
-1- Catalogue: Popular
-2- Catalogue: Most recent
+1- Catalogue: Latest 100 Most Popular
+2- Catalogue: Latest 100 Most recent
 3- Search
     `);
 
     let optionChoice = prompt("Choice:  ");
 
+    if (optionChoice.toLowerCase() == "q") {
+      break;
+    }
+    optionChoice = parseInt(optionChoice) ?? 1;
+
     if (!isNaN(optionChoice)) {
       if (optionChoice <= 3 && optionChoice > 0) {
-        console.log("go...");
-        console.log(optionChoice);
-        prompt("");
         switch (optionChoice) {
           case 1:
-            popularOption();
+            clear();
+            await popularOption("rating");
+            break;
+          case 2:
+            clear();
+            await popularOption("newly_added");
+            break;
+          case 3:
+            clear();
+            await searchOption();
             break;
 
           default:
             continue;
         }
-      } else {
-        continue;
-      }
-    } else {
-      if (optionChoice.toUpperCase() == "Q") {
-        break;
       } else {
         continue;
       }
