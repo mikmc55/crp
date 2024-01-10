@@ -18,46 +18,22 @@ const agent = new SocksProxyAgent(
   `socks://${proxyUsername}:${proxyPassword}@${proxyHost}:${proxyPort}`
 );
 
-let getTokenFromLogin = async (username, password) => {
-  for (let i = 0; i < 2; i++) {
-    try {
-      const data = new URLSearchParams();
-      data.append("grant_type", "password");
-      data.append("device_id", "0C132130-1014-4FB7-B3A2-F3F120EADA4C");
-      data.append("password", password);
-      data.append("username", username);
-      data.append("device_name", "iPhone");
-      data.append("device_type", "iPhone 11");
-
-      let resp = await fetch("https://beta-api.crunchyroll.com/auth/v1/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          Authorization:
-            "Basic b2VkYXJteHN0bGgxanZhd2ltbnE6OWxFaHZIWkpEMzJqdVY1ZFc5Vk9TNTdkb3BkSnBnbzE=",
-          "User-Agent": "Crunchyroll/4.40.1",
-        },
-        agent,
-        body: data.toString(),
-      });
-
-      resp = resp?.statusText == "OK" ? await resp.json() : {};
-      return resp;
-    } catch (error) {
-      Log.error(error);
-      continue;
-    }
-  }
-  return null;
-};
-
 let getDataForTokenRequest = async () => {
   for (let i = 0; i < 2; i++) {
     try {
-      const data = new URLSearchParams();
+      let refreshToken = await fetch(
+        "https://raw.githubusercontent.com/Samfun75/File-host/main/aniyomi/refreshToken.txt"
+      );
 
+      refreshToken =
+        refreshToken?.statusText == "OK" ? await refreshToken.text() : "";
+
+      refreshToken = refreshToken.replace(/[\n\r]/gi, "");
+      const data = new URLSearchParams();
       data.append("grant_type", "etp_rt_cookie");
-      data.append("device_id", "8db3bac6-9c3c-48da-9c89-0a9e15f8cae8");
+      data.append("device_id", "e3375e59-6de6-41f9-aca0-ec71447f51a7");
+      // data.append("grant_type", "refresh_token");
+      // data.append("refresh_token", refreshToken);
       data.append("scope", "offline_access");
 
       let resp = await fetch("https://beta-api.crunchyroll.com/auth/v1/token", {
@@ -65,28 +41,17 @@ let getDataForTokenRequest = async () => {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
           Authorization: "Basic bm9haWhkZXZtXzZpeWcwYThsMHE6",
-          Cookie: "etp_rt=6601b307-9315-4096-9523-a21709b01d0b;",
+          // "Basic a3ZvcGlzdXZ6Yy0teG96Y21kMXk6R21JSTExenVPVnRnTjdlSWZrSlpibzVuLTRHTlZ0cU8=",
+          Cookie: "etp_rt=bf61b89c-1af2-4801-91ed-cd0c584d1d8c;",
         },
         agent,
         body: data.toString(),
       });
-
-      if (resp.statusText != "OK") {
-        resp = await resp.json();
-      } else {
-        resp = await getTokenFromLogin("dsami273@gmail.com", "davidka12");
-        resp = "access_token" in resp ? resp : {};
-      }
+      console.log({ resp: await resp.text() });
+      resp = resp?.statusText == "OK" ? await resp.json() : {};
       return resp;
     } catch (error) {
-      try {
-        let res = await getTokenFromLogin("dsami273@gmail.com", "davidka12");
-        res = "access_token" in res ? res : {};
-        return res;
-      } catch (error) {
-        Log.error(error);
-        continue;
-      }
+      continue;
     }
   }
 };
@@ -99,7 +64,6 @@ let getToken = async () => {
     for (let id = 0; id < 2; id++) {
       try {
         let tokenData = await getDataForTokenRequest();
-
         let newToken = await fetch(
           "https://beta-api.crunchyroll.com/index/v2",
           {
@@ -113,10 +77,10 @@ let getToken = async () => {
         let allTokens = JSON.parse(newToken);
         allTokens["token"] = tokenData;
         _token = allTokens;
+
         tokenTime = Date.now();
         return allTokens;
       } catch (error) {
-        Log.error(error);
         continue;
       }
     }
@@ -814,50 +778,12 @@ let getPopularCatalog = async (type = "popularity") => {
   }
 };
 
-(async () => {
-  // searchOption();
-  //
-  while (true) {
-    clear();
-    console.log("-------------------------");
-    console.log("CRP: Crunchyroll Premium");
-    console.log("-------------------------");
-
-    console.log(`
-1- Catalogue: Latest 100 Most Popular
-2- Catalogue: Latest 100 Most recent
-3- Search
-    `);
-
-    let optionChoice = prompt("Choice:  ");
-
-    if (optionChoice.toLowerCase() == "q") {
-      break;
-    }
-    optionChoice = parseInt(optionChoice) ?? 1;
-
-    if (!isNaN(optionChoice)) {
-      if (optionChoice <= 3 && optionChoice > 0) {
-        switch (optionChoice) {
-          case 1:
-            clear();
-            await popularOption("popularity");
-            break;
-          case 2:
-            clear();
-            await popularOption("newly_added");
-            break;
-          case 3:
-            clear();
-            await searchOption();
-            break;
-
-          default:
-            continue;
-        }
-      } else {
-        continue;
-      }
-    }
-  }
-})();
+module.exports = {
+  getData,
+  getDataForTokenRequest,
+  getEps,
+  getMediaInfo,
+  getPopularCatalog,
+  getSeasons,
+  getToken,
+};
