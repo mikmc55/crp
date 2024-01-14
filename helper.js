@@ -1,5 +1,6 @@
 class Log {
-  static LOG_PATH = "./data/logs.txt";
+  static LOG_PATH =
+    "/home/daniwalter001/Projects/Perso/moe_catalog/data/logs.txt";
   static log = (level = "D", content = "") => {
     let log = `${new Date()
       .toISOString()

@@ -36,11 +36,15 @@ let getTokenFromLogin = async (username, password) => {
           Authorization:
             "Basic b2VkYXJteHN0bGgxanZhd2ltbnE6OWxFaHZIWkpEMzJqdVY1ZFc5Vk9TNTdkb3BkSnBnbzE=",
           "User-Agent": "Crunchyroll/4.40.1",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Accept-Encoding": "gzip, deflate, br",
+          Accept: "application/json, text/plain, */*",
         },
         agent,
         body: data.toString(),
       });
-
+      console.log({ resp: await resp.text() });
+      prompt("");
       resp = resp?.statusText == "OK" ? await resp.json() : {};
       return resp;
     } catch (error) {
@@ -57,7 +61,7 @@ let getDataForTokenRequest = async () => {
       const data = new URLSearchParams();
 
       data.append("grant_type", "etp_rt_cookie");
-      data.append("device_id", "8db3bac6-9c3c-48da-9c89-0a9e15f8cae8");
+      data.append("device_id", "8dea608f-d535-43be-94a9-1fe17a67bb1b");
       data.append("scope", "offline_access");
 
       let resp = await fetch("https://beta-api.crunchyroll.com/auth/v1/token", {
@@ -65,13 +69,16 @@ let getDataForTokenRequest = async () => {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
           Authorization: "Basic bm9haWhkZXZtXzZpeWcwYThsMHE6",
-          Cookie: "etp_rt=6601b307-9315-4096-9523-a21709b01d0b;",
+          Cookie: "etp_rt=8546034a-5f45-4d91-86db-ad8ddcfd0071;",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Accept-Encoding": "gzip, deflate, br",
+          Accept: "application/json, text/plain, */*",
         },
         agent,
         body: data.toString(),
       });
 
-      if (resp.statusText != "OK") {
+      if (resp.statusText == "OK") {
         resp = await resp.json();
       } else {
         resp = await getTokenFromLogin("dsami273@gmail.com", "davidka12");

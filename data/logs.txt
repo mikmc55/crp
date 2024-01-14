@@ -16,3 +16,7 @@
 2024-01-10 14:07:37:E: SyntaxError: Unexpected end of JSON input
 2024-01-10 14:08:15:E: TypeError: body used already for: https://beta-api.crunchyroll.com/auth/v1/token
 2024-01-10 14:08:17:E: TypeError: body used already for: https://beta-api.crunchyroll.com/auth/v1/token
+2024-01-14 14:06:28:E: SyntaxError: Unexpected end of JSON input
+2024-01-14 14:06:31:E: SyntaxError: Unexpected end of JSON input
+2024-01-14 14:10:59:E: SyntaxError: Unexpected end of JSON input
+2024-01-14 14:11:02:E: SyntaxError: Unexpected end of JSON input
